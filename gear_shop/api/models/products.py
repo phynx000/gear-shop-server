@@ -3,6 +3,15 @@ from django.db import models
 import random
 import string
 from django.conf import settings
+import os
+from django.core.exceptions import ValidationError
+
+
+def validate_image_extension(file):
+    valid_extensions = ['.jpg', '.jpeg', '.png', '.gif', '.svg', '.webp']
+    ext = os.path.splitext(file.name)[1].lower()
+    if ext not in valid_extensions:
+        raise ValidationError(f'File không hợp lệ. Chỉ hỗ trợ: {", ".join(valid_extensions)}')
 
 
 def product_image_upload_path(instance, filename):
@@ -14,6 +23,7 @@ def product_image_upload_path(instance, filename):
 class Category(models.Model):
     name = models.CharField(max_length=255, unique=True)
     code = models.CharField(max_length=20, unique=True,default="GEAR_000")
+    icon = models.FileField(upload_to='category_icons/', validators=[validate_image_extension], blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
@@ -22,6 +32,7 @@ class Category(models.Model):
 class Brand(models.Model):
     name = models.CharField(max_length=255, unique=True)
     created_at = models.DateTimeField(auto_now_add=True)
+
     def __str__(self):
         return self.name
 

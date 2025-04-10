@@ -13,6 +13,7 @@ import os
 from datetime import timedelta
 from pathlib import Path
 from dotenv import load_dotenv
+import dj_database_url
 
 load_dotenv()
 
@@ -103,7 +104,8 @@ MIDDLEWARE = [
 
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:3000",
-    "https://gearshopchinhhang.vercel.app"
+    "https://gearshopchinhhang.vercel.app",
+"http://localhost:3001",
 ]
 CORS_ALLOW_CREDENTIALS = True
 CORS_ALLOW_HEADERS = [
@@ -159,6 +161,13 @@ DATABASES = {
         'PORT': '5432',
     }
 }
+
+os.environ["PG_BIN"] = r"C:\Program Files\PostgreSQL\15\bin"
+
+# DATABASES = {
+#     'default': dj_database_url.config(default=os.getenv('DATABASE_URL'))
+# }
+
 
 
 # Password validation

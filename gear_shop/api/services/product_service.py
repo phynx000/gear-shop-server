@@ -12,7 +12,7 @@ class ProductService:
 
     @staticmethod
     def get_product_by_name(name):
-        return Product.objects.get(name=name)
+        return Product.objects.prefetch_related("images").filter(name=name).all()
 
     @staticmethod
     def get_product_by_category(category_id):
