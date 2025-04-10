@@ -8,6 +8,8 @@ from ..serializer import ProductSerializer, ProductImageSerializer
 
 logger = logging.getLogger(__name__)
 
+
+# view trả về danh sách tất cả sản phẩm
 class ProductListView(APIView):
     permission_classes = [AllowAny]
     def  get(self, request):
@@ -15,12 +17,17 @@ class ProductListView(APIView):
         serializer = ProductSerializer(products, many=True)
         return Response(serializer.data)
 
-    def get_product_by_id(self, pk):
+#view để trả về 1 sản phẩm theo id
+class ProductDetailView(APIView):
+    permission_classes = [AllowAny]
+
+    def get(self, request, pk):
         product = ProductService.get_product_by_id(pk)
         serializer = ProductSerializer(product)
         return Response(serializer.data)
 
 
+# view trả về danh sách sản phẩm theo category ( danh mục)
 class ProductByCategoryListView(APIView):
     permission_classes = [AllowAny]
     def get(self, request, category_id):
@@ -33,6 +40,7 @@ class ProductByCategoryListView(APIView):
             return Response(serializer.data, status=status.HTTP_200_OK)
         except Exception as e:
             return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
 
 class ProductImageListView(APIView):
     def get(self, request, pk):
