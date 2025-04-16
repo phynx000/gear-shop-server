@@ -29,3 +29,4 @@ media/
 *.swp
 ../.idea/
 .vscode/
+*.idea
