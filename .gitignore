@@ -1,0 +1,31 @@
+# Loại trừ môi trường ảo (venv)
+venv/
+.venv/
+env/
+
+# Loại trừ file Python cache
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Loại trừ file môi trường
+gear_shop/.env
+*.env
+
+# Loại trừ database SQLite (nếu có)
+db.sqlite3
+
+# Loại trừ file logs và dữ liệu cache
+*.log
+*.pot
+*.pyc
+.DS_Store
+
+# Loại trừ thư mục static và media nếu có
+staticfiles/
+media/
+
+# Loại trừ file cài đặt của hệ điều hành
+*.swp
+../.idea/
+.vscode/
