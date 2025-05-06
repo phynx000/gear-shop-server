@@ -1,3 +1,5 @@
+from django.shortcuts import get_object_or_404
+
 from ..models.products import Product, ProductImage
 
 
@@ -8,7 +10,7 @@ class ProductService:
 
     @staticmethod
     def get_product_by_id(product_id):
-        return Product.objects.prefetch_related("images").all()
+        return get_object_or_404(Product.objects.prefetch_related("images"), id=product_id)
 
     @staticmethod
     def get_product_by_name(name):

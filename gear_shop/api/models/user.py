@@ -3,7 +3,9 @@ from django.db import models
 
 #models cho user
 class CustomUser(AbstractUser):
-    full_name = models.CharField(max_length=100, blank=True, null=True)
+    # full_name = models.CharField(max_length=100, blank=True, null=True)
+    first_name = models.CharField(max_length=100, blank=True, null=True)
+    last_name = models.CharField(max_length=100, blank=True, null=True)
     phone = models.CharField(max_length=15, blank=True, null=True, unique=True)
     email = models.EmailField(unique=True)
     address = models.CharField(blank=True, null=True)

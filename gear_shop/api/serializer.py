@@ -8,6 +8,8 @@ from .models.flash_sale import FlashSale
 from .models.order import OrderItem, Order
 from .models.products import Product, Category, Brand, ProductImage
 from .models.specification import Specification
+from .models.stock import Stock
+from .models.branch import Branch
 from .models.user import CustomUser
 from django.contrib.auth import get_user_model
 from django.contrib.auth import authenticate
@@ -21,10 +23,11 @@ class ProductImageSerializer(serializers.ModelSerializer):
 
 class ProductSerializer(serializers.ModelSerializer):
     images = ProductImageSerializer(many=True, read_only=True)
-
     class Meta:
         model = Product
-        fields = ["id", "name", "description", "price", "category", "images", "product_group"]
+        fields = ["id", "name", "description", "original_price", "category", "images", "product_group" , "slug", "box_content"]
+
+
 
 class CategorySerializer(serializers.ModelSerializer):
     class Meta:
@@ -60,6 +63,25 @@ class FlashSaleSerializer(serializers.ModelSerializer):
     class Meta:
         model = FlashSale
         fields = "__all__"
+
+class BranchSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Branch
+        fields = ['id', 'name', 'address', 'phone']
+
+
+class StockSerializer(serializers.ModelSerializer):
+    branch = BranchSerializer(read_only=True)
+    branch_id = serializers.PrimaryKeyRelatedField(
+        queryset=Branch.objects.all(), write_only=True, source='branch'
+    )
+    product_id = serializers.PrimaryKeyRelatedField(
+        queryset=Product.objects.all(), write_only=True, source='product'
+    )
+
+    class Meta:
+        model = Stock
+        fields = ['id', 'product_id', 'branch_id', 'branch', 'quantity']
 
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
@@ -104,7 +126,8 @@ class LoginSerializer(serializers.Serializer):
                     'id': user.id,
                     'username': user.username,
                     'email': user.email,
-                    'full_name': user.full_name,
+                    'first_name': user.first_name,
+                    'last_name' : user.last_name,
                     'phone': user.phone,
                     'address': user.address,
                 }

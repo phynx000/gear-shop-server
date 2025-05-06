@@ -8,6 +8,7 @@ from .views.product_view import ProductListView, ProductImageListView, ProductBy
 from .views.category_view import CategoryListView
 from .views.register_view import RegisterView, LoginView, LogoutView
 from .views.brand_view import BrandListView
+from .views.stock_view import StockListCreateView,StockByProductView
 
 urlpatterns = [
     path('products/', ProductListView.as_view(), name='product-list'), # api trả về danh sách tất cả sản phẩm
@@ -20,6 +21,9 @@ urlpatterns = [
     # path('products/category/<int:category_id>/', ProductByCategoryListView.as_view(), name='product-list-by-category'),
     path('products/<slug:slug>/', ProductByCategoryListView.as_view() ,name='product-list-by-category'),
     path("brands/<int:category_id>/", BrandListView.get_brands_by_category, name="get_brands_by_category"),
+    path("stocks/", StockListCreateView.as_view(), name="stock-list-create"),
+    path("stocks/product/<int:product_id>/", StockByProductView.as_view(), name="stock-by-product"),
+
 
     path('register/', RegisterView.as_view(), name='register'),
     path('login/', LoginView.as_view(), name='login'),

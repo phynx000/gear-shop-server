@@ -1,11 +1,13 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
 
+from .models.branch import Branch
 from .models.user import CustomUser
 from .models.order import Order, OrderItem
 from .models.products import Product, Category, Brand, ProductImage
 from .models.specification import Specification
 from .forms.product_form import ProductForm
+from .models.stock import Stock
 
 # Register your models here.
 
@@ -21,11 +23,28 @@ class ProductImageInline(admin.TabularInline):
         obj.delete()  # Gọi delete() trong model để xóa ảnh trên S
 
 
+@admin.register(Branch)
+class BranchAdmin(admin.ModelAdmin):
+    list_display = ('name', 'address')
+    search_fields = ['name', 'address']
+
+@admin.register(Stock)
+class StockAdmin(admin.ModelAdmin):
+    list_display = ('product', 'branch', 'quantity', 'color')
+
+
+class StockInline(admin.TabularInline):
+    model = Stock
+    extra = 1
+    autocomplete_fields = ['branch']
+    verbose_name = "Tồn kho tại chi nhánh"
+    verbose_name_plural = "Thông tin tồn kho"
+
 class ProductAdmin(admin.ModelAdmin):
-    list_display = ('name', 'price')
+    list_display = ('name', 'original_price')
     form = ProductForm
     # Gắn Specification vào ProductAdmin
-    inlines = [SpecificationInline, ProductImageInline]
+    inlines = [SpecificationInline, ProductImageInline, StockInline]
     def delete_queryset(self, request, queryset):
         """Xóa tất cả ảnh trên S3 trước khi xóa nhiều sản phẩm"""
         for product in queryset:
@@ -47,8 +66,11 @@ class CustomUserAdmin(UserAdmin):
         ("Thông tin bổ sung", {"fields": ("full_name", "phone", "address", "is_admin")}),
     )
     add_fieldsets = UserAdmin.add_fieldsets + (
-        ("Thông tin bổ sung", {"fields": ("full_name", "phone", "address")}),
+        ("Thông tin bổ sung", {"fields": ("email","first_name", "last_name", "phone", "address")}),
     )
+
+
+
 
 admin.site.register(ProductImage, ProductImageAdmin)
 

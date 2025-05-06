@@ -49,15 +49,17 @@ class Brand(models.Model):
         return self.name
 
 class Product(models.Model):
+    name = models.CharField(max_length=255)
+    category = models.ForeignKey(Category, on_delete=models.CASCADE)
     sku = models.CharField(max_length=20, unique=True, blank=True)
     brand = models.ForeignKey(Brand, on_delete=models.CASCADE, null=True, blank=True)  # Liên kết Brand
-    name = models.CharField(max_length=255)
     description = models.JSONField(default=dict,null=True, blank=True)
-    price = models.DecimalField(max_digits=10, decimal_places=2)
+    original_price = models.DecimalField(max_digits=10, decimal_places=2)
+    slug = models.SlugField(max_length=255, unique=True, null=True, blank=True)
     product_group = models.CharField(max_length=100, null=True, blank= True)
-
-    category = models.ForeignKey(Category, on_delete=models.CASCADE)
-
+    version = models.CharField(max_length=100, null=True, blank=True)
+    box_content = models.JSONField(default=dict, null=True, blank=True)
+    is_new = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
 
 
@@ -70,6 +72,8 @@ class Product(models.Model):
     def save(self, *args, **kwargs):
         if not self.sku:  # Nếu SKU để trống thì tự động tạo
             self.sku = self.generate_sku()
+        if not self.slug or slugify(self.name) != self.slug: # tự động tạo slug khi trường này bỏ trống
+            self.slug = slugify(self.name)
         super().save(*args, **kwargs)
 
     def delete(self, *args, **kwargs):
