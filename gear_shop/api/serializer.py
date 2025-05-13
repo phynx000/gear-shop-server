@@ -11,6 +11,7 @@ from .models.specification import Specification
 from .models.stock import Stock
 from .models.branch import Branch
 from .models.user import CustomUser
+from .models.cart import Cart, CartItem
 from django.contrib.auth import get_user_model
 from django.contrib.auth import authenticate
 
@@ -34,15 +35,35 @@ class CategorySerializer(serializers.ModelSerializer):
         model = Category
         fields = '__all__'
 
-class OrderItemSerializer(serializers.ModelSerializer):
+class CartSerializer(serializers.ModelSerializer):
     class Meta:
-        model = OrderItem
+        model = Cart
         fields = '__all__'
 
-class OrderSerializer(serializers.ModelSerializer):
+# class CartItemSerializer(serializers.ModelSerializer):
+#     product_name = serializers.CharField(source='product.name', read_only=True)
+#     product_price = serializers.DecimalField(source='product.price', max_digits=10, decimal_places=2, read_only=True)
+#
+#     class Meta:
+#         model = CartItem
+#         fields = ['id', 'product', 'product_name', 'product_price', 'quantity']
+
+class CartItemSerializer(serializers.ModelSerializer):
+    product = ProductSerializer(read_only=True)
+
     class Meta:
-        model = Order
-        fields = '__all__'
+        model = CartItem
+        fields = ['id', 'product', 'quantity']
+
+# class OrderItemSerializer(serializers.ModelSerializer):
+#     class Meta:
+#         model = OrderItem
+#         fields = '__all__'
+#
+# class OrderSerializer(serializers.ModelSerializer):
+#     class Meta:
+#         model = Order
+#         fields = '__all__'
 
 class BrandSerializer(serializers.ModelSerializer):
     class Meta:
@@ -93,14 +114,16 @@ class RegisterSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = CustomUser
-        fields = ['username', 'email', 'password', 'full_name', 'phone', 'address']
+        fields = ['username', 'email', 'password', 'first_name','last_name', 'phone', 'address']
 
     def create(self, validated_data):
         # Sử dụng set_password để lưu mật khẩu dạng hash
         user = CustomUser.objects.create(
             username=validated_data['username'],
             email=validated_data['email'],
-            full_name=validated_data.get('full_name', ''),
+            # full_name=validated_data.get('full_name', ''),
+            first_name=validated_data['first_name'],
+            last_name=validated_data['last_name'],
             phone=validated_data.get('phone', ''),
             address=validated_data.get('address', '')
         )
@@ -133,3 +156,4 @@ class LoginSerializer(serializers.Serializer):
                 }
             }
         raise serializers.ValidationError("Sai tài khoản hoặc mật khẩu!")
+

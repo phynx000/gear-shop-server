@@ -26,7 +26,7 @@ class ProductDetailView(APIView):
 
     def get(self, request, pk):
         product = ProductService.get_product_by_id(pk)
-        serializer = ProductSerializer(product)  # ❌ Không dùng many=True
+        serializer = ProductSerializer(product)  #  Không dùng many=True
         return Response(serializer.data)
 
 

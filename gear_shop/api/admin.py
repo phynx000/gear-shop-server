@@ -8,6 +8,7 @@ from .models.products import Product, Category, Brand, ProductImage
 from .models.specification import Specification
 from .forms.product_form import ProductForm
 from .models.stock import Stock
+from .models.cart import Cart, CartItem
 
 # Register your models here.
 
@@ -59,6 +60,20 @@ class ProductImageAdmin(admin.ModelAdmin):
         for image in queryset:
             image.delete()  # Gọi delete() của model
 
+
+class CartItemInline(admin.TabularInline):
+    model = CartItem
+    extra = 0  # Không thêm hàng trống mặc định
+
+@admin.register(Cart)
+class CartAdmin(admin.ModelAdmin):
+    list_display = ('id', 'user', 'created_at')
+    inlines = [CartItemInline]
+
+@admin.register(CartItem)
+class CartItemAdmin(admin.ModelAdmin):
+    list_display = ('id', 'cart', 'product', 'quantity')
+    list_filter = ('cart', 'product')
 
 class CustomUserAdmin(UserAdmin):
     # Hiển thị các trường của CustomUser trong Admin

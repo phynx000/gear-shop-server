@@ -32,6 +32,16 @@ AWS_STORAGE_BUCKET_NAME = os.getenv('AWS_STORAGE_BUCKET_NAME')
 AWS_S3_REGION_NAME = os.getenv("AWS_S3_REGION_NAME", "us-east-1")
 AWS_S3_CUSTOM_DOMAIN = f"{AWS_STORAGE_BUCKET_NAME}.s3.amazonaws.com"
 
+
+
+# vnpay
+VNPAY_TMN_CODE = os.getenv("VNPAY_TMN_CODE")
+VNPAY_HASH_SECRET = os.getenv("VNPAY_HASH_SECRET").strip()
+VNPAY_RETURN_URL = "http://localhost:3000/payment/vnpay-return"
+VNPAY_PAYMENT_URL = os.getenv("VNPAY_PAYMENT_URL")
+
+
+
 MEDIA_URL = f"https://{AWS_S3_CUSTOM_DOMAIN}/media/"
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -64,7 +74,8 @@ INSTALLED_APPS = [
     'storages',
     'corsheaders',
     'rest_framework_simplejwt',
-    'rest_framework_simplejwt.token_blacklist',  # Để hỗ trợ blacklist token khi logout
+    'rest_framework_simplejwt.token_blacklist',# Để hỗ trợ blacklist token khi logout
+
 
 ]
 
@@ -84,6 +95,8 @@ SIMPLE_JWT = {
     'ROTATE_REFRESH_TOKENS': True,  # Khi refresh, tạo refresh token mới
     'BLACKLIST_AFTER_ROTATION': True,  # Blacklist refresh token cũ
     'ALGORITHM': 'HS256',
+
+
 }
 
 
@@ -99,6 +112,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+
 
 ]
 
