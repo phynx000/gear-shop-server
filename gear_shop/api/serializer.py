@@ -121,13 +121,12 @@ class RegisterSerializer(serializers.ModelSerializer):
         user = CustomUser.objects.create(
             username=validated_data['username'],
             email=validated_data['email'],
-            # full_name=validated_data.get('full_name', ''),
             first_name=validated_data['first_name'],
             last_name=validated_data['last_name'],
             phone=validated_data.get('phone', ''),
             address=validated_data.get('address', '')
         )
-        user.set_password(validated_data['password'])  # Băm (hash) mật khẩu đúng cách
+        user.set_password(validated_data['password'])
         user.save()
         return user
 
