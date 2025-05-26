@@ -23,6 +23,7 @@ class VNPAYReturnView(APIView):
 
             try:
                 order = Order.objects.get(id=order_id)
+                print(order_id)
                 order.vnp_transaction_id = transaction_id
                 order.status = "Completed"
                 order.save()
@@ -31,9 +32,11 @@ class VNPAYReturnView(APIView):
                 product_ids = OrderItem.objects.filter(order=order).values_list('product_id', flat=True)
 
                 # ✅ Xóa các CartItem cùng user và product
-                CartItem.objects.filter(user=order.user, product_id__in=product_ids).delete()
+                # CartItem.objects.filter(user=order.user, product_id__in=product_ids).delete()  # đoạn này lỗi
 
-                return Response({"message": "Thanh toán thành công"})
+                CartItem.objects.filter(cart__user=order.user, product_id__in=product_ids).delete()
+
+                return Response({"message": "Thanh toán thành công" , "order_id": order_id})
             except Order.DoesNotExist:
                 return Response({"error": "Đơn hàng không tồn tại"}, status=404)
         else:

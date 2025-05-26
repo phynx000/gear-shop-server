@@ -65,7 +65,7 @@ class VNPay:
         # Generate hash for verification
         hashValue = self.__hmacsha512(secret_key, hasData)
 
-        print(f'Validate debug, HashData: {hasData}\nHashValue: {hashValue}\nInputHash: {vnp_SecureHash}')
+        # print(f'Validate debug, HashData: {hasData}\nHashValue: {hashValue}\nInputHash: {vnp_SecureHash}')
 
         # Compare the generated hash with the provided hash
         return vnp_SecureHash == hashValue

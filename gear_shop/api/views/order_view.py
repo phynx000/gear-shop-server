@@ -101,5 +101,5 @@ class CreateOrderView(APIView):
             settings.VNPAY_HASH_SECRET.strip()
         )
 
-        print(f"VNPAY Payment URL: {payment_url}")
+        # print(f"VNPAY Payment URL: {payment_url}")
         return payment_url
