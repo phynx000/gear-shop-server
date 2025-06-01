@@ -14,7 +14,7 @@ class Order(models.Model):
     ]
 
     user = models.ForeignKey(CustomUser, on_delete=models.CASCADE)
-    total_price = models.DecimalField(max_digits=10, decimal_places=2)
+    total_price = models.DecimalField(max_digits=20, decimal_places=2)
     email = models.EmailField(null=True)
     status = models.CharField(max_length=10, choices=STATUS_CHOICES, default='Pending')
     payment_method = models.CharField(max_length=100)

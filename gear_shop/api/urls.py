@@ -1,7 +1,7 @@
 from django.urls import path, include
 from rest_framework_simplejwt.views import TokenRefreshView
 
-from .views import checkout_view
+from .views import checkout_view, search_view
 from .views.brand_view import BrandListView
 from .views.coupon_view import ApplyCouponView
 from .views.flash_sale_view import FlashSaleListView
@@ -10,6 +10,8 @@ from .views.product_view import ProductListView, ProductImageListView, ProductBy
 from .views.category_view import CategoryListView
 from .views.register_view import RegisterView, LoginView, LogoutView
 from .views.brand_view import BrandListView
+from .views.search_view import search_products_strict
+
 from .views.stock_view import StockListCreateView,StockByProductView
 from .views.cart_view import AddToCartView, GetCartItemsView, UpdateQuantityCart
 from .views.vnpay_payment_return import VNPAYReturnView
@@ -40,6 +42,18 @@ urlpatterns = [
     path('orders/create/', CreateOrderView.as_view(), name='create-order'),
     path('payment/vnpay-return/', VNPAYReturnView.as_view(), name='vnpay-return'),
 
+    # Add this to gear_shop/api/urls.py
 
 
+    # Add this to the urlpatterns list
+
+    # API tìm kiếm chính
+    path('search/', search_view.search_products, name='search_products'),
+
+    # API gợi ý tìm kiếm
+    path('search/suggestions/', search_view.search_suggestions, name='search_suggestions'),
+
+    path('search/strict/', search_products_strict, name='search_products_strict'),
+    # API lấy bộ lọc
+    path('search/filters/', search_view.get_search_filters, name='search_filters'),
 ]

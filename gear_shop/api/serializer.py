@@ -22,14 +22,6 @@ class ProductImageSerializer(serializers.ModelSerializer):
         model = ProductImage
         fields = ["image"]
 
-class ProductSerializer(serializers.ModelSerializer):
-    images = ProductImageSerializer(many=True, read_only=True)
-    class Meta:
-        model = Product
-        fields = ["id", "name", "description", "original_price", "category", "images", "product_group" , "slug", "box_content"]
-
-
-
 class CategorySerializer(serializers.ModelSerializer):
     class Meta:
         model = Category
@@ -48,12 +40,7 @@ class CartSerializer(serializers.ModelSerializer):
 #         model = CartItem
 #         fields = ['id', 'product', 'product_name', 'product_price', 'quantity']
 
-class CartItemSerializer(serializers.ModelSerializer):
-    product = ProductSerializer(read_only=True)
 
-    class Meta:
-        model = CartItem
-        fields = ['id', 'product', 'quantity']
 
 # class OrderItemSerializer(serializers.ModelSerializer):
 #     class Meta:
@@ -74,6 +61,24 @@ class SpecificationSerializer(serializers.ModelSerializer):
     class Meta:
         model = Specification
         fields = '__all__'
+
+
+class ProductSerializer(serializers.ModelSerializer):
+    brand = BrandSerializer()
+    category = CategorySerializer()
+    images = ProductImageSerializer(many=True, read_only=True)
+
+    class Meta:
+        model = Product
+        fields = ["id", "name", "description", "original_price", "category", "brand", "images", "product_group", "slug",
+                  "box_content"]
+        # Đã thêm "brand" vào danh sách fields
+class CartItemSerializer(serializers.ModelSerializer):
+    product = ProductSerializer(read_only=True)
+
+    class Meta:
+        model = CartItem
+        fields = ['id', 'product', 'quantity']
 
 class CouponSerializer(serializers.ModelSerializer):
     class Meta:
