@@ -33,6 +33,18 @@ def search_products(request):
 
     # Khởi tạo query set
     products = Product.objects.all()
+    
+    # Tìm danh mục phù hợp với từ khóa tìm kiếm
+    category_matches = Category.objects.filter(
+        Q(name__icontains=query) | 
+        Q(slug__icontains=query.replace(' ', '-'))
+    )
+    
+    # Lấy sản phẩm thuộc các danh mục phù hợp (độ ưu tiên cao nhất)
+    category_priority_products = Product.objects.none()
+    if category_matches.exists():
+        category_ids = category_matches.values_list('id', flat=True)
+        category_priority_products = Product.objects.filter(category__id__in=category_ids)
 
     # Tạo điều kiện tìm kiếm với độ ưu tiên
     primary_conditions = Q()  # Tìm kiếm chính xác (độ ưu tiên cao)
@@ -92,12 +104,14 @@ def search_products(request):
         category_q = Q(category__name__icontains=category_filter) | Q(category__slug__icontains=category_filter)
         high_priority_products = high_priority_products.filter(category_q)
         low_priority_products = low_priority_products.filter(category_q)
+        category_priority_products = category_priority_products.filter(category_q)
 
     # Lọc theo thương hiệu nếu có
     if brand_filter:
         brand_q = Q(brand__name__icontains=brand_filter)
         high_priority_products = high_priority_products.filter(brand_q)
         low_priority_products = low_priority_products.filter(brand_q)
+        category_priority_products = category_priority_products.filter(brand_q)
 
     # Sắp xếp kết quả
     def apply_sorting(queryset, sort_type):
@@ -114,33 +128,53 @@ def search_products(request):
         else:  # relevance hoặc mặc định
             return queryset.order_by('-created_at')
 
+    category_priority_products = apply_sorting(category_priority_products, sort_by)
     high_priority_products = apply_sorting(high_priority_products, sort_by)
     low_priority_products = apply_sorting(low_priority_products, sort_by)
 
     # Kết hợp kết quả với độ ưu tiên
     final_results = []
 
-    # Lấy sản phẩm độ ưu tiên cao trước
-    high_priority_list = list(high_priority_products[:limit])
-    final_results.extend(high_priority_list)
-
-    # Nếu chưa đủ, lấy thêm sản phẩm độ ưu tiên thấp
-    remaining_limit = limit - len(high_priority_list)
+    # 1. Đầu tiên, ưu tiên sản phẩm thuộc danh mục phù hợp với từ khóa tìm kiếm
+    category_priority_list = list(category_priority_products[:limit])
+    final_results.extend(category_priority_list)
+    
+    # 2. Tiếp theo, lấy sản phẩm độ ưu tiên cao
+    remaining_limit = limit - len(final_results)
     if remaining_limit > 0:
-        low_priority_list = list(low_priority_products[:remaining_limit])
+        high_priority_list = list(high_priority_products.exclude(
+            id__in=[p.id for p in final_results]
+        )[:remaining_limit])
+        final_results.extend(high_priority_list)
+
+    # 3. Nếu chưa đủ, lấy thêm sản phẩm độ ưu tiên thấp
+    remaining_limit = limit - len(final_results)
+    if remaining_limit > 0:
+        low_priority_list = list(low_priority_products.exclude(
+            id__in=[p.id for p in final_results]
+        )[:remaining_limit])
         final_results.extend(low_priority_list)
 
     # Serialize dữ liệu
     serializer = ProductSerializer(final_results, many=True)
 
-    # Tính tổng số kết quả
-    total_high_priority = high_priority_products.count()
-    total_low_priority = low_priority_products.count()
-    total_results = total_high_priority + total_low_priority
+    # Tính tổng số kết quả (loại bỏ các trùng lặp giữa các danh sách)
+    total_category_priority = category_priority_products.count()
+    total_high_priority = high_priority_products.exclude(
+        id__in=category_priority_products.values_list('id', flat=True)
+    ).count()
+    total_low_priority = low_priority_products.exclude(
+        id__in=category_priority_products.values_list('id', flat=True)
+    ).exclude(
+        id__in=high_priority_products.values_list('id', flat=True)
+    ).count()
+    
+    total_results = total_category_priority + total_high_priority + total_low_priority
 
     return Response({
         'query': query,
         'total_results': total_results,
+        'category_priority_results': total_category_priority,
         'high_priority_results': total_high_priority,
         'low_priority_results': total_low_priority,
         'returned_results': len(serializer.data),
@@ -152,8 +186,8 @@ def search_products(request):
             'limit': limit
         },
         'search_info': {
-            'message': f'Tìm thấy {total_high_priority} kết quả chính xác và {total_low_priority} kết quả liên quan',
-            'suggestion': 'Kết quả được sắp xếp theo độ liên quan, sản phẩm chính xác hiển thị trước'
+            'message': f'Tìm thấy {total_category_priority} sản phẩm trong danh mục liên quan, {total_high_priority} kết quả chính xác và {total_low_priority} kết quả mở rộng',
+            'suggestion': 'Kết quả được sắp xếp theo độ liên quan, ưu tiên hiển thị sản phẩm thuộc danh mục phù hợp'
         }
     }, status=status.HTTP_200_OK)
 

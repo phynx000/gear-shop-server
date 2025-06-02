@@ -77,3 +77,16 @@ class UpdateQuantityCart(APIView):
                 {"error": "Cart item not found"},
                 status=status.HTTP_404_NOT_FOUND,
             )
+
+
+class RemoveCartItemView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def delete(self, request, item_id):
+        try:
+            # Use cart__user instead of user to filter through the relationship
+            cart_item = CartItem.objects.get(id=item_id, cart__user=request.user)
+            cart_item.delete()
+            return Response({"message": "Item removed from cart successfully"}, status=status.HTTP_200_OK)
+        except CartItem.DoesNotExist:
+            return Response({"error": "Cart item not found"}, status=status.HTTP_404_NOT_FOUND)

@@ -3,6 +3,8 @@ from logging.config import valid_ident
 from rest_framework import serializers
 from rest_framework_simplejwt.tokens import RefreshToken
 
+
+from .models.FeaturedProduct import FeaturedGroup,FeaturedProduct
 from .models.coupon import Coupon
 from .models.flash_sale import FlashSale
 from .models.order import OrderItem, Order
@@ -67,12 +69,15 @@ class ProductSerializer(serializers.ModelSerializer):
     brand = BrandSerializer()
     category = CategorySerializer()
     images = ProductImageSerializer(many=True, read_only=True)
+    specifications = SpecificationSerializer(many=True, read_only=True, source='specification_set')
 
     class Meta:
         model = Product
-        fields = ["id", "name", "description", "original_price", "category", "brand", "images", "product_group", "slug",
-                  "box_content"]
-        # Đã thêm "brand" vào danh sách fields
+        fields = [
+            'id', 'name', 'category', 'sku', 'brand', 'description',
+            'original_price', 'slug', 'product_group', 'version',
+            'box_content', 'is_new', 'created_at', 'images', 'specifications'
+        ]
 class CartItemSerializer(serializers.ModelSerializer):
     product = ProductSerializer(read_only=True)
 
@@ -108,6 +113,21 @@ class StockSerializer(serializers.ModelSerializer):
     class Meta:
         model = Stock
         fields = ['id', 'product_id', 'branch_id', 'branch', 'quantity']
+
+class FeaturedProductSerializer(serializers.ModelSerializer):
+    product = ProductSerializer()
+
+    class Meta:
+        model = FeaturedProduct
+        fields = ['product', 'priority']
+
+
+class FeaturedGroupSerializer(serializers.ModelSerializer):
+    featured_products = FeaturedProductSerializer(many=True)
+
+    class Meta:
+        model = FeaturedGroup
+        fields = ['name', 'description', 'featured_products']
 
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
@@ -161,3 +181,13 @@ class LoginSerializer(serializers.Serializer):
             }
         raise serializers.ValidationError("Sai tài khoản hoặc mật khẩu!")
 
+class UserSerializer(serializers.ModelSerializer):
+    """
+    Serializer for the user profile information.
+    Converts CustomUser model instances into JSON representation.
+    """
+    class Meta:
+        model = User
+        fields = ['id', 'username', 'email', 'first_name','last_name', 'phone', 'address']
+        # Excludes password and other sensitive fields
+        read_only_fields = ['id', 'username', 'email']  # These fields shouldn't be updated via this serializer

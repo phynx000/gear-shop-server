@@ -5,8 +5,10 @@ from datetime import datetime
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
-from rest_framework import status
-from ..serializers.orders_serializers import OrderCreateSerializer
+from rest_framework import status, generics
+
+from ..models import Order
+from ..serializers.orders_serializers import OrderCreateSerializer, GetOrderSerializer
 from ..services.vnpay import VNPay
 
 
@@ -75,3 +77,12 @@ class CreateOrderView(APIView):
 
         # print(f"VNPAY Payment URL: {payment_url}")
         return payment_url
+
+
+class OrderHistoryView(generics.ListAPIView):
+    serializer_class = GetOrderSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        user = self.request.user
+        return Order.objects.filter(user=user).order_by('-created_at')

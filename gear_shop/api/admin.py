@@ -1,6 +1,8 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
 
+# from .models import FeaturedProduct
+from .models.FeaturedProduct import FeaturedGroup, FeaturedProduct
 from .models.branch import Branch
 from .models.user import CustomUser
 from .models.order import Order, OrderItem
@@ -44,6 +46,7 @@ class StockInline(admin.TabularInline):
 class ProductAdmin(admin.ModelAdmin):
     list_display = ('name', 'original_price')
     form = ProductForm
+    search_fields = ['name', 'brand__name']  # thêm dòng này
     # Gắn Specification vào ProductAdmin
     inlines = [SpecificationInline, ProductImageInline, StockInline]
     def delete_queryset(self, request, queryset):
@@ -78,13 +81,33 @@ class CartItemAdmin(admin.ModelAdmin):
 class CustomUserAdmin(UserAdmin):
     # Hiển thị các trường của CustomUser trong Admin
     fieldsets = UserAdmin.fieldsets + (
-        ("Thông tin bổ sung", {"fields": ("full_name", "phone", "address", "is_admin")}),
+        ("Thông tin bổ sung", {"fields": ( "phone", "address", "is_admin")}),
     )
     add_fieldsets = UserAdmin.add_fieldsets + (
         ("Thông tin bổ sung", {"fields": ("email","first_name", "last_name", "phone", "address")}),
     )
 
+class FeaturedProductInline(admin.TabularInline):
+    model = FeaturedProduct
+    extra = 1  # Số dòng thêm mới hiển thị sẵn
+    autocomplete_fields = ['product']
+    ordering = ['priority']
 
+
+@admin.register(FeaturedGroup)
+class FeaturedGroupAdmin(admin.ModelAdmin):
+    list_display = ['name', 'start_date', 'end_date']
+    inlines = [FeaturedProductInline]
+    search_fields = ['name']
+    list_filter = ['start_date', 'end_date']
+
+
+@admin.register(FeaturedProduct)
+class FeaturedProductAdmin(admin.ModelAdmin):
+    list_display = ['product', 'group', 'priority']
+    list_filter = ['group']
+    autocomplete_fields = ['product', 'group']
+    ordering = ['group', 'priority']
 
 
 admin.site.register(ProductImage, ProductImageAdmin)

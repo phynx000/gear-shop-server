@@ -1,11 +1,12 @@
 from django.shortcuts import get_object_or_404
+from rest_framework.decorators import api_view
 from rest_framework.permissions import AllowAny, IsAuthenticated
 import logging
 from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from ..models import Category
+from ..models import Category, Product
 from ..services.product_service import ProductService
 from ..serializer import ProductSerializer, ProductImageSerializer
 
@@ -63,3 +64,53 @@ class ProductImageListView(APIView):
         product_image_list = ProductService.get_product_image_by_product(pk)
         serializer = ProductImageSerializer(product_image_list, many=True)
         return Response(serializer.data)
+
+
+@api_view(['GET'])
+def get_product_versions(request, product_id):
+    """
+    API lấy các phiên bản sản phẩm cùng product_group
+    """
+    try:
+        # Lấy sản phẩm hiện tại
+        current_product = Product.objects.get(id=product_id)
+
+        # Lấy tất cả sản phẩm cùng product_group, trừ sản phẩm hiện tại
+        if current_product.product_group:
+            versions = Product.objects.filter(
+                product_group=current_product.product_group
+            ).exclude(id=product_id).order_by('version')
+
+            # Serialize dữ liệu
+            serializer = ProductSerializer(versions, many=True)
+
+            return Response({
+                'current_product': {
+                    'id': current_product.id,
+                    'name': current_product.name,
+                    'version': current_product.version,
+                    'product_group': current_product.product_group
+                },
+                'versions': serializer.data,
+                'total_versions': versions.count() + 1  # +1 cho sản phẩm hiện tại
+            }, status=status.HTTP_200_OK)
+        else:
+            return Response({
+                'current_product': {
+                    'id': current_product.id,
+                    'name': current_product.name,
+                    'version': current_product.version,
+                    'product_group': current_product.product_group
+                },
+                'versions': [],
+                'total_versions': 1
+            }, status=status.HTTP_200_OK)
+
+    except Product.DoesNotExist:
+        return Response({
+            'error': 'Sản phẩm không tồn tại'
+        }, status=status.HTTP_404_NOT_FOUND)
+    except Exception as e:
+        return Response({
+            'error': str(e)
+        }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
