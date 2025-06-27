@@ -45,3 +45,59 @@ class LogoutView(APIView):
             return Response({"error": "Token không hợp lệ"}, status=status.HTTP_400_BAD_REQUEST)
 
 
+class ChangePasswordView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        user = request.user
+        current_password = request.data.get("current_password")
+        new_password = request.data.get("new_password")
+
+        # Validate required fields
+        if not current_password or not new_password:
+            return Response(
+                {"error": "Vui lòng cung cấp mật khẩu hiện tại và mật khẩu mới"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        # Validate password minimum length
+        if len(new_password) < 6:
+            return Response(
+                {"error": "Mật khẩu mới phải có ít nhất 6 ký tự"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        # Verify current password
+        if not user.check_password(current_password):
+            return Response(
+                {"error": "Mật khẩu hiện tại không đúng"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        # Set and save new password
+        user.set_password(new_password)
+        user.save()
+
+        return Response(
+            {"message": "Thay đổi mật khẩu thành công"},
+            status=status.HTTP_200_OK
+        )
+
+
+# Add to api/views/user_view.py
+class CheckUserRoleView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        user = request.user
+        data = {
+            'id': user.id,
+            'username': user.username,
+            'role': user.role,
+            'is_customer': user.is_customer,
+            'is_staff': user.is_staff_member,
+            'is_admin': user.is_admin_user,
+            'first_name': user.first_name,
+            'last_name': user.last_name,
+        }
+        return Response(data)

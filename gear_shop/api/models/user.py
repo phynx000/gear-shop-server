@@ -1,15 +1,48 @@
-from django.contrib.auth.models import AbstractUser ,Group, Permission
+# from django.contrib.auth.models import AbstractUser ,Group, Permission
+# from django.db import models
+#
+# #models cho user
+# class CustomUser(AbstractUser):
+#     # full_name = models.CharField(max_length=100, blank=True, null=True)
+#     first_name = models.CharField(max_length=100, blank=True, null=True)
+#     last_name = models.CharField(max_length=100, blank=True, null=True)
+#     phone = models.CharField(max_length=15, blank=True, null=True, unique=True)
+#     email = models.EmailField(unique=True)
+#     address = models.CharField(blank=True, null=True)
+#     is_admin = models.BooleanField(default=False)
+#
+#     # Thêm related_name để tránh xung đột với auth.User
+#     groups = models.ManyToManyField(Group, related_name="customuser_groups", blank=True)
+#     user_permissions = models.ManyToManyField(Permission, related_name="customuser_permissions", blank=True)
+#
+#     def __str__(self):
+#         return self.username
+
+
+from django.contrib.auth.models import AbstractUser, Group, Permission
 from django.db import models
 
-#models cho user
+
 class CustomUser(AbstractUser):
-    # full_name = models.CharField(max_length=100, blank=True, null=True)
+    # User roles
+    CUSTOMER = 'customer'
+    STAFF = 'staff'
+    ADMIN = 'admin_site'
+
+    ROLE_CHOICES = [
+        (CUSTOMER, 'Customer'),
+        (STAFF, 'Staff'),
+        (ADMIN, 'Admin'),
+    ]
+
     first_name = models.CharField(max_length=100, blank=True, null=True)
     last_name = models.CharField(max_length=100, blank=True, null=True)
     phone = models.CharField(max_length=15, blank=True, null=True, unique=True)
     email = models.EmailField(unique=True)
     address = models.CharField(blank=True, null=True)
-    is_admin = models.BooleanField(default=False)
+
+    # Replace is_admin with role field
+    role = models.CharField(max_length=20, choices=ROLE_CHOICES, default=CUSTOMER)
 
     # Thêm related_name để tránh xung đột với auth.User
     groups = models.ManyToManyField(Group, related_name="customuser_groups", blank=True)
@@ -17,3 +50,15 @@ class CustomUser(AbstractUser):
 
     def __str__(self):
         return self.username
+
+    @property
+    def is_customer(self):
+        return self.role == self.CUSTOMER
+
+    @property
+    def is_staff_member(self):
+        return self.role == self.STAFF
+
+    @property
+    def is_admin_user(self):
+        return self.role == self.ADMIN

@@ -1,5 +1,7 @@
+from dal import autocomplete
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
+from django import forms
 
 # from .models import FeaturedProduct
 from .models.FeaturedProduct import FeaturedGroup, FeaturedProduct
@@ -14,7 +16,7 @@ from .models.cart import Cart, CartItem
 
 # Register your models here.
 
-class SpecificationInline(admin.TabularInline):  # Hoặc admin.StackedInline nếu thích giao diện dọc
+class SpecificationInline(admin.TabularInline):  # Hoặc admin_site.StackedInline nếu thích giao diện dọc
     model = Specification
     extra = 3  # Số ô nhập thông số mặc định
 
@@ -26,8 +28,24 @@ class ProductImageInline(admin.TabularInline):
         obj.delete()  # Gọi delete() trong model để xóa ảnh trên S
 
 
+class BranchAdminForm(forms.ModelForm):
+    class Meta:
+        model = Branch
+        fields = '__all__'
+        widgets = {
+            'district': autocomplete.ModelSelect2(
+                url='district-autocomplete',
+                forward=['province']  # forward province_id để lọc
+            ),
+            'ward': autocomplete.ModelSelect2(
+                url='ward-autocomplete',
+                forward=['district']  # forward district_id để lọc
+            )
+        }
+
 @admin.register(Branch)
 class BranchAdmin(admin.ModelAdmin):
+    form = BranchAdminForm
     list_display = ('name', 'address')
     search_fields = ['name', 'address']
 
@@ -78,14 +96,26 @@ class CartItemAdmin(admin.ModelAdmin):
     list_display = ('id', 'cart', 'product', 'quantity')
     list_filter = ('cart', 'product')
 
+
 class CustomUserAdmin(UserAdmin):
-    # Hiển thị các trường của CustomUser trong Admin
-    fieldsets = UserAdmin.fieldsets + (
-        ("Thông tin bổ sung", {"fields": ( "phone", "address", "is_admin")}),
+    list_display = ('username', 'email', 'first_name', 'last_name', 'role', 'is_active')
+    list_filter = ('role', 'is_active')
+    fieldsets = (
+        (None, {'fields': ('username', 'password')}),
+        ('Personal info', {'fields': ('first_name', 'last_name', 'email', 'phone', 'address')}),
+        ('Permissions', {'fields': ('role', 'is_active', 'groups', 'user_permissions')}),
+        ('Important dates', {'fields': ('last_login', 'date_joined')}),
     )
-    add_fieldsets = UserAdmin.add_fieldsets + (
-        ("Thông tin bổ sung", {"fields": ("email","first_name", "last_name", "phone", "address")}),
+    add_fieldsets = (
+        (None, {
+            'classes': ('wide',),
+            'fields': ('username', 'email', 'password1', 'password2', 'role', 'is_active'),
+        }),
     )
+    search_fields = ('username', 'email', 'first_name', 'last_name')
+    ordering = ('username',)
+
+# admin_site.site.register(CustomUser, CustomUserAdmin)
 
 class FeaturedProductInline(admin.TabularInline):
     model = FeaturedProduct

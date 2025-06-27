@@ -1,7 +1,7 @@
-from  django.db import models
+from django.db import models
+from .branch import Branch
+from .products import Product
 
-from ..models.branch import Branch
-from ..models.products import Product
 
 class Stock(models.Model):
     product = models.ForeignKey(Product, on_delete=models.CASCADE)
@@ -12,3 +12,5 @@ class Stock(models.Model):
     class Meta:
         unique_together = ('product', 'branch', 'color')
 
+    def __str__(self):
+        return f"{self.product.name} - {self.branch.name} - {self.color} - {self.quantity}"

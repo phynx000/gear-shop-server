@@ -6,11 +6,29 @@ from ..models.user import CustomUser
 
 
 class Order(models.Model):
+    # STATUS_CHOICES = [
+    #     ('Pending', 'Pending'),
+    #     ('Completed', 'Completed'),
+    #     ('Cancelled', 'Cancelled'),
+    #     ('Delivered', 'Delivered')
+    # ]
     STATUS_CHOICES = [
-        ('Pending', 'Pending'),
-        ('Completed', 'Completed'),
-        ('Cancelled', 'Cancelled'),
-        ('Delivered', 'Delivered')
+        ('Pending', 'Chờ xác nhận'),
+        ('Confirmed', 'Đã xác nhận'),
+        ('Processing', 'Đang xử lý'),
+        ('Delivering', 'Đang giao hàng'),
+        ('Delivered', 'Đã giao hàng'),
+        ('Completed', 'Hoàn tất'),
+        ('Cancelled', 'Đã hủy'),
+        ('Refunded', 'Đã hoàn tiền')
+    ]
+
+    PAYMENT_STATUS_CHOICES = [
+        ('Unpaid', 'Chưa thanh toán'),
+        ('PendingCOD', 'Chờ thanh toán (COD)'),
+        ('Paid', 'Đã thanh toán'),
+        ('Failed', 'Thanh toán thất bại'),
+        ('Refunded', 'Đã hoàn tiền')
     ]
 
     user = models.ForeignKey(CustomUser, on_delete=models.CASCADE)
@@ -20,6 +38,11 @@ class Order(models.Model):
     payment_method = models.CharField(max_length=100)
     vnp_transaction_id = models.CharField(max_length=100, blank=True, null=True)
     is_paid = models.BooleanField(default=False)
+    payment_status = models.CharField(
+        max_length=20,
+        choices=PAYMENT_STATUS_CHOICES,
+        default='Unpaid'
+    )
     shipping_address = models.TextField(null=True)
     phone = models.CharField(max_length=15, null=True)
     note = models.TextField(blank=True, null=True)

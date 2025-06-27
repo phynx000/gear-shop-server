@@ -2,13 +2,16 @@
 
 from django.conf import settings
 from datetime import datetime
+
+from django.shortcuts import get_object_or_404
 from rest_framework.views import APIView
 from rest_framework.response import Response
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import IsAuthenticated, IsAdminUser
+from ..permissions import IsStaffUser
 from rest_framework import status, generics
 
 from ..models import Order
-from ..serializers.orders_serializers import OrderCreateSerializer, GetOrderSerializer
+from ..serializers.orders_serializers import OrderCreateSerializer, GetOrderSerializer, OrderStatusUpdateSerializer
 from ..services.vnpay import VNPay
 
 
@@ -33,6 +36,7 @@ class CreateOrderView(APIView):
                 "order_id": order.id,
             }, status=status.HTTP_201_CREATED)
 
+        print("Order creation failed:", serializer.errors)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     def build_vnpay_url(self, order, request):
@@ -86,3 +90,36 @@ class OrderHistoryView(generics.ListAPIView):
     def get_queryset(self):
         user = self.request.user
         return Order.objects.filter(user=user).order_by('-created_at')
+
+
+class AdminOrderListView(generics.ListAPIView):
+    queryset = Order.objects.all().order_by('-created_at')
+    serializer_class = GetOrderSerializer
+    permission_class = [IsStaffUser]  # Only staff users can access
+
+
+class StaffOrderStatusUpdateView(APIView):
+    permission_classes = [IsStaffUser]
+
+    def patch(self, request, order_id):
+        try:
+            order = get_object_or_404(Order, id=order_id)
+            serializer = OrderStatusUpdateSerializer(order, data=request.data, partial=True)
+
+            if serializer.is_valid():
+                serializer.save()
+                return Response({
+                    "message": "Order status updated successfully",
+                    "order_id": order.id,
+                    "status": order.status,
+                    "payment_status": order.payment_status
+                }, status=status.HTTP_200_OK)
+
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+        except Exception as e:
+            print(f"Error updating order status: {str(e)}")
+            return Response(
+                {"error": "An error occurred while updating the order status"},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )

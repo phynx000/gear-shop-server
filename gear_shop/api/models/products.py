@@ -29,10 +29,6 @@ class Category(models.Model):
     def __str__(self):
         return self.name
 
-    # def save(self, *args, **kwargs):
-    #     if not self.slug:
-    #         self.slug = slugify(self.name)
-    #     super().save(*args, **kwargs)
 
     def save(self, *args, **kwargs):
         # Luôn cập nhật slug từ name nếu slug rỗng hoặc name đã thay đổi
@@ -54,14 +50,14 @@ class Product(models.Model):
     sku = models.CharField(max_length=20, unique=True, blank=True)
     brand = models.ForeignKey(Brand, on_delete=models.CASCADE, null=True, blank=True)  # Liên kết Brand
     description = models.JSONField(default=dict,null=True, blank=True)
-    original_price = models.DecimalField(max_digits=20, decimal_places=2)
+    original_price = models.DecimalField(null= True,max_digits=20, decimal_places=2)
     slug = models.SlugField(max_length=255, unique=True, null=True, blank=True)
     product_group = models.CharField(max_length=100, null=True, blank= True)
     version = models.CharField(max_length=100, null=True, blank=True)
     box_content = models.JSONField(default=dict, null=True, blank=True)
     is_new = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
-
+    sold = models.IntegerField(default=0)  # Số lượng đã bán
 
     def generate_sku(self):
         """Tạo SKU tự động nếu chưa có, theo format: CATEGORY_CODE + 4 ký tự ngẫu nhiên"""

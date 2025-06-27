@@ -48,12 +48,34 @@ class GetOrderItemSerializer(serializers.ModelSerializer):
 
 
 class GetOrderSerializer(serializers.ModelSerializer):
-    items = OrderItemSerializer(many=True, read_only=True, source='orderitem_set')
-    status_display = serializers.CharField(source='get_status_display', read_only=True)
-    total_quantity = serializers.SerializerMethodField()
+    user_name = serializers.SerializerMethodField()
     class Meta:
         model = Order
-        fields = ['id', 'user', 'created_at', 'status', 'status_display'
-                  , 'shipping_address', 'items', 'total_price', 'total_quantity', 'phone', 'note']
+        fields = ['id', 'user_name', 'total_price', 'status', 'payment_method',
+                  'payment_status', 'created_at', 'shipping_address',
+                   ]
+        depth = 1
     def get_total_quantity(self, obj):
         return sum(item.quantity for item in obj.items.all())
+
+    def get_user_name(self, obj):
+        return obj.user.first_name if obj.user else None
+
+
+class OrderStatusUpdateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Order
+        fields = ['status', 'payment_status']
+
+    def validate_status(self, value):
+        valid_statuses = [status[0] for status in Order.STATUS_CHOICES]
+        if value not in valid_statuses:
+            raise serializers.ValidationError(f"Invalid status. Choose from: {', '.join(valid_statuses)}")
+        return value
+
+    def validate_payment_status(self, value):
+        valid_payment_statuses = [status[0] for status in Order.PAYMENT_STATUS_CHOICES]
+        if value not in valid_payment_statuses:
+            raise serializers.ValidationError(
+                f"Invalid payment status. Choose from: {', '.join(valid_payment_statuses)}")
+        return value
