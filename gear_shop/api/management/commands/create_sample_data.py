@@ -1,139 +1,131 @@
-# management/commands/create_sample_data.py
 from django.core.management.base import BaseCommand
-from django.db import transaction
-
-import random
-
-from api.models import Product
-from api.models.administrative import Province
-from api.models.branch import Branch
-from api.models.stock import Stock
-
+from api.models.products import Category, Brand
+from django.db import IntegrityError
 
 class Command(BaseCommand):
-    help = 'Create sample data for testing'
+    help = 'Tạo dữ liệu mẫu cho Category và Brand để test import Excel'
 
-    def add_arguments(self, parser):
-        parser.add_argument(
-            '--products',
-            type=int,
-            default=10,
-            help='Number of products to create'
-        )
-        parser.add_argument(
-            '--branches',
-            type=int,
-            default=20,
-            help='Number of branches to create'
-        )
-
-    @transaction.atomic
-    def handle(self, *args, **options):
-        self.stdout.write('Creating sample data...')
-
-        # Tạo sản phẩm mẫu
-        products_data = [
-            'iPhone 15 Pro Max', 'Samsung Galaxy S24 Ultra', 'MacBook Air M3',
-            'iPad Pro 12.9', 'AirPods Pro 2', 'Apple Watch Series 9',
-            'Sony WH-1000XM5', 'Dell XPS 13', 'HP Pavilion 15',
-            'Asus ROG Strix G15', 'Lenovo ThinkPad X1', 'Surface Pro 9'
+    def get_default_categories_data(self):
+        """Trả về dữ liệu categories mặc định nếu database trống"""
+        return [
+            {'name': 'Chuột máy tính', 'code': 'MOUSE_001'},
+            {'name': 'Bàn phím', 'code': 'KEYBOARD_001'},
+            {'name': 'Tai nghe', 'code': 'HEADSET_001'},
+            {'name': 'Màn hình', 'code': 'MONITOR_001'},
+            {'name': 'CPU', 'code': 'CPU_001'},
+            {'name': 'RAM', 'code': 'RAM_001'},
+            {'name': 'Ổ cứng', 'code': 'STORAGE_001'},
+            {'name': 'VGA', 'code': 'VGA_001'},
+            {'name': 'Mainboard', 'code': 'MOBO_001'},
+            {'name': 'Nguồn máy tính', 'code': 'PSU_001'},
         ]
 
-        products = []
-        for i, name in enumerate(products_data[:options['products']]):
-            product = Product.objects.create(
-                name=name,
-                original_price=random.randint(500000, 50000000),
-                description=f'Mô tả cho {name}'
-            )
-            products.append(product)
+    def get_default_brands_data(self):
+        """Trả về dữ liệu brands mặc định nếu database trống"""
+        return [
+            'Logitech', 'Corsair', 'SteelSeries', 'ASUS', 'Intel', 'Samsung',
+            'NVIDIA', 'AMD', 'MSI', 'Gigabyte', 'Razer', 'HyperX',
+            'Cooler Master', 'Thermaltake', 'EVGA', 'Seasonic', 'Western Digital',
+            'Seagate', 'Kingston', 'G.Skill', 'Crucial', 'LG', 'AOC', 'Dell'
+        ]
 
-        self.stdout.write(f'Created {len(products)} products')
-
-        # Lấy một số tỉnh và quận để tạo chi nhánh
-        provinces = list(Province.objects.all()[:5])  # Lấy 5 tỉnh đầu
-
-        if not provinces:
+    def load_categories_from_db(self):
+        """Load categories từ database, nếu trống thì sử dụng dữ liệu mặc định"""
+        existing_categories = Category.objects.all()
+        if existing_categories.exists():
             self.stdout.write(
-                self.style.WARNING('No provinces found. Please import administrative data first.')
+                self.style.SUCCESS(f'📊 Tìm thấy {existing_categories.count()} danh mục trong database')
             )
-            return
-
-        # Tạo chi nhánh mẫu
-        branch_names = [
-            'Chi nhánh Trung tâm', 'Chi nhánh Quận 1', 'Chi nhánh Quận 3',
-            'Chi nhánh Quận 7', 'Chi nhánh Tân Bình', 'Chi nhánh Phú Nhuận',
-            'Chi nhánh Gò Vấp', 'Chi nhánh Thủ Đức', 'Chi nhánh Bình Thạnh',
-            'Chi nhánh Tân Phú', 'Chi nhánh Quận 2', 'Chi nhánh Quận 4',
-            'Chi nhánh Quận 5', 'Chi nhánh Quận 6', 'Chi nhánh Quận 8',
-            'Chi nhánh Quận 10', 'Chi nhánh Quận 11', 'Chi nhánh Quận 12',
-            'Chi nhánh Hóc Môn', 'Chi nhánh Củ Chi'
-        ]
-
-        branches = []
-        colors = ['Đỏ', 'Xanh', 'Đen', 'Trắng', 'Vàng', 'Hồng', 'Tím', 'Xám']
-
-        for i, name in enumerate(branch_names[:options['branches']]):
-            province = random.choice(provinces)
-            districts = list(province.districts.all())
-
-            if districts:
-                district = random.choice(districts)
-                wards = list(district.wards.all())
-                ward = random.choice(wards) if wards else None
-            else:
-                district = None
-                ward = None
-
-            branch = Branch.objects.create(
-                name=name,
-                province=province,
-                district=district,
-                ward=ward,
-                address=f'Số {random.randint(1, 999)} Đường {random.choice(["Nguyễn Huệ", "Lê Lợi", "Trần Hưng Đạo", "Hai Bà Trưng", "Điện Biên Phủ"])}',
-                phone=f'028 {random.randint(1000, 9999)} {random.randint(1000, 9999)}'
+            return [{'name': cat.name, 'code': cat.code} for cat in existing_categories]
+        else:
+            self.stdout.write(
+                self.style.WARNING('⚠ Database trống, sử dụng dữ liệu mặc định cho categories')
             )
-            branches.append(branch)
+            return self.get_default_categories_data()
 
-        self.stdout.write(f'Created {len(branches)} branches')
-
-        # Tạo dữ liệu tồn kho
-        stock_count = 0
-        for product in products:
-            # Mỗi sản phẩm có mặt tại 60-90% chi nhánh
-            available_branches = random.sample(
-                branches,
-                random.randint(int(len(branches) * 0.6), int(len(branches) * 0.9))
+    def load_brands_from_db(self):
+        """Load brands từ database, nếu trống thì sử dụng dữ liệu mặc định"""
+        existing_brands = Brand.objects.all()
+        if existing_brands.exists():
+            self.stdout.write(
+                self.style.SUCCESS(f'📊 Tìm thấy {existing_brands.count()} thương hiệu trong database')
             )
+            return [brand.name for brand in existing_brands]
+        else:
+            self.stdout.write(
+                self.style.WARNING('⚠ Database trống, sử dụng dữ liệu mặc định cho brands')
+            )
+            return self.get_default_brands_data()
 
-            for branch in available_branches:
-                # Mỗi chi nhánh có 2-5 màu khác nhau
-                available_colors = random.sample(
-                    colors,
-                    random.randint(2, min(5, len(colors)))
+    def handle(self, *args, **options):
+        self.stdout.write(
+            self.style.SUCCESS('🚀 Bắt đầu tải dữ liệu categories và brands...')
+        )
+
+        # Load dữ liệu từ database hoặc sử dụng mặc định
+        categories_data = self.load_categories_from_db()
+        brands_data = self.load_brands_from_db()
+
+        # Tạo categories
+        created_categories = 0
+        for cat_data in categories_data:
+            try:
+                category, created = Category.objects.get_or_create(
+                    name=cat_data['name'],
+                    defaults={'code': cat_data['code']}
+                )
+                if created:
+                    created_categories += 1
+                    self.stdout.write(
+                        self.style.SUCCESS(f'✓ Tạo danh mục: {category.name}')
+                    )
+                else:
+                    self.stdout.write(
+                        self.style.WARNING(f'⚠ Danh mục đã tồn tại: {category.name}')
+                    )
+            except IntegrityError:
+                # Xử lý trường hợp slug trùng lặp
+                self.stdout.write(
+                    self.style.WARNING(f'⚠ Danh mục "{cat_data["name"]}" có vấn đề với slug, bỏ qua.')
                 )
 
-                for color in available_colors:
-                    quantity = random.randint(1, 50)
-                    Stock.objects.create(
-                        product=product,
-                        branch=branch,
-                        color=color,
-                        quantity=quantity
+        # Tạo brands
+        created_brands = 0
+        for brand_name in brands_data:
+            try:
+                brand, created = Brand.objects.get_or_create(name=brand_name)
+                if created:
+                    created_brands += 1
+                    self.stdout.write(
+                        self.style.SUCCESS(f'✓ Tạo thương hiệu: {brand.name}')
                     )
-                    stock_count += 1
+                else:
+                    self.stdout.write(
+                        self.style.WARNING(f'⚠ Thương hiệu đã tồn tại: {brand.name}')
+                    )
+            except IntegrityError:
+                self.stdout.write(
+                    self.style.WARNING(f'⚠ Thương hiệu "{brand_name}" có vấn đề, bỏ qua.')
+                )
 
-        self.stdout.write(f'Created {stock_count} stock records')
+        # Hiển thị thống kê dữ liệu hiện có
+        total_categories = Category.objects.count()
+        total_brands = Brand.objects.count()
 
         self.stdout.write(
             self.style.SUCCESS(
-                f'Sample data created successfully!\n'
-                f'- {len(products)} products\n'
-                f'- {len(branches)} branches\n'
-                f'- {stock_count} stock records'
+                f'\n🎉 Hoàn thành! Đã tạo {created_categories} danh mục và {created_brands} thương hiệu mới.'
             )
         )
 
-# Để chạy các lệnh này, sử dụng:
-# python manage.py import_administrative_data
-# python manage.py create_sample_data
+        self.stdout.write(
+            self.style.SUCCESS(
+                f'📊 Tổng số danh mục: {total_categories}, Tổng số thương hiệu: {total_brands}'
+            )
+        )
+
+        self.stdout.write(
+            self.style.SUCCESS(
+                '\n📝 Bây giờ bạn có thể tải template Excel và import sản phẩm!'
+            )
+        )

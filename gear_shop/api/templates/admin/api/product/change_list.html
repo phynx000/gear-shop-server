@@ -1,0 +1,15 @@
+{% extends "admin/change_list.html" %}
+
+{% block object-tools-items %}
+    {{ block.super }}
+    <li>
+        <a href="{% url 'admin_site-product-upload-excel' %}" class="addlink">
+            Upload Excel
+        </a>
+    </li>
+    <li>
+        <a href="{% url 'admin_site-download-product-template' %}" class="addlink">
+            Tải Template Excel
+        </a>
+    </li>
+{% endblock %}

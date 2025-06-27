@@ -1,0 +1,193 @@
+{% extends "admin/base_site.html" %}
+{% load i18n admin_urls static %}
+
+{% block title %}{{ title }} | {{ site_title|default:_('Django site admin') }}{% endblock %}
+
+{% block breadcrumbs %}
+<div class="breadcrumbs">
+<a href="{% url 'admin:index' %}">{% trans 'Home' %}</a>
+&rsaquo; <a href="{% url 'admin:app_list' app_label=opts.app_label %}">{{ opts.app_label|capfirst|escape }}</a>
+&rsaquo; <a href="{% url 'admin:api_product_changelist' %}">Products</a>
+&rsaquo; {{ title }}
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="module aligned">
+    <h1>{{ title }}</h1>
+
+    <div class="form-row">
+        <div class="field-box">
+            <div class="help">
+                <h3>Hướng dẫn upload sản phẩm từ Excel:</h3>
+                <ul>
+                    <li>File Excel phải có định dạng .xlsx hoặc .xls</li>
+                    <li>Kích thước file không quá 5MB</li>
+                    <li>Các cột bắt buộc: <strong>name, category, original_price</strong></li>
+                    <li>Danh mục (category) và thương hiệu (brand) phải tồn tại trong hệ thống</li>
+                    <li><a href="{% url 'admin_site-download-product-template' %}" class="button">Tải file Excel mẫu</a></li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    {% if messages %}
+        {% for message in messages %}
+            <div class="alert alert-{{ message.tags }}">
+                {{ message|linebreaks }}
+            </div>
+        {% endfor %}
+    {% endif %}
+
+    <form method="post" enctype="multipart/form-data" class="form-horizontal">
+        {% csrf_token %}
+
+        <fieldset class="module aligned">
+            <div class="form-row">
+                <div>
+                    <label for="{{ form.excel_file.id_for_label }}" class="required">{{ form.excel_file.label }}:</label>
+                    {{ form.excel_file }}
+                    {% if form.excel_file.help_text %}
+                        <div class="help">{{ form.excel_file.help_text }}</div>
+                    {% endif %}
+                    {% if form.excel_file.errors %}
+                        <ul class="errorlist">
+                            {% for error in form.excel_file.errors %}
+                                <li>{{ error }}</li>
+                            {% endfor %}
+                        </ul>
+                    {% endif %}
+                </div>
+            </div>
+        </fieldset>
+
+        <div class="submit-row">
+            <input type="submit" value="Upload và Import" class="default" />
+            <a href="{% url 'admin:api_product_changelist' %}" class="button cancel-link">Hủy</a>
+        </div>
+    </form>
+
+    <div class="module">
+        <h2>Cấu trúc file Excel:</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>Cột</th>
+                    <th>Bắt buộc</th>
+                    <th>Kiểu dữ liệu</th>
+                    <th>Mô tả</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><strong>name</strong></td>
+                    <td>Có</td>
+                    <td>Text</td>
+                    <td>Tên sản phẩm</td>
+                </tr>
+                <tr>
+                    <td><strong>category</strong></td>
+                    <td>Có</td>
+                    <td>Text</td>
+                    <td>Tên danh mục (phải tồn tại trong hệ thống)</td>
+                </tr>
+                <tr>
+                    <td><strong>original_price</strong></td>
+                    <td>Có</td>
+                    <td>Number</td>
+                    <td>Giá gốc</td>
+                </tr>
+                <tr>
+                    <td>brand</td>
+                    <td>Không</td>
+                    <td>Text</td>
+                    <td>Tên thương hiệu (sẽ tự tạo nếu chưa có)</td>
+                </tr>
+                <tr>
+                    <td>description</td>
+                    <td>Không</td>
+                    <td>Text/JSON</td>
+                    <td>Mô tả sản phẩm</td>
+                </tr>
+                <tr>
+                    <td>product_group</td>
+                    <td>Không</td>
+                    <td>Text</td>
+                    <td>Nhóm sản phẩm</td>
+                </tr>
+                <tr>
+                    <td>version</td>
+                    <td>Không</td>
+                    <td>Text</td>
+                    <td>Phiên bản sản phẩm</td>
+                </tr>
+                <tr>
+                    <td>box_content</td>
+                    <td>Không</td>
+                    <td>Text/JSON</td>
+                    <td>Nội dung hộp</td>
+                </tr>
+                <tr>
+                    <td>is_new</td>
+                    <td>Không</td>
+                    <td>Boolean</td>
+                    <td>Sản phẩm mới (True/False)</td>
+                </tr>
+                <tr>
+                    <td>specifications</td>
+                    <td>Không</td>
+                    <td>JSON</td>
+                    <td>Thông số kỹ thuật</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<style>
+    .alert {
+        padding: 10px;
+        margin: 10px 0;
+        border: 1px solid transparent;
+        border-radius: 4px;
+    }
+    .alert-success {
+        color: #3c763d;
+        background-color: #dff0d8;
+        border-color: #d6e9c6;
+    }
+    .alert-warning {
+        color: #8a6d3b;
+        background-color: #fcf8e3;
+        border-color: #faebcc;
+    }
+    .alert-error {
+        color: #a94442;
+        background-color: #f2dede;
+        border-color: #ebccd1;
+    }
+    .cancel-link {
+        margin-left: 10px;
+    }
+    table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 10px;
+    }
+    table th, table td {
+        border: 1px solid #ddd;
+        padding: 8px;
+        text-align: left;
+    }
+    table th {
+        background-color: #f2f2f2;
+        font-weight: bold;
+    }
+    .help {
+        margin: 10px 0;
+        padding: 10px;
+        background-color: #f9f9f9;
+        border-left: 4px solid #ddd;
+    }
+</style>
+{% endblock %}

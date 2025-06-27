@@ -67,6 +67,26 @@ class ProductAdmin(admin.ModelAdmin):
     search_fields = ['name', 'brand__name']  # thêm dòng này
     # Gắn Specification vào ProductAdmin
     inlines = [SpecificationInline, ProductImageInline, StockInline]
+
+    def changelist_view(self, request, extra_context=None):
+        """Thêm nút Upload Excel vào trang danh sách sản phẩm"""
+        extra_context = extra_context or {}
+        extra_context['custom_buttons'] = [
+            {
+                'url': '/api/admin_site/products/upload-excel/',
+                'title': 'Upload Excel',
+                'class': 'addlink',
+                'icon': 'icon-upload'
+            },
+            {
+                'url': '/api/admin_site/products/download-template/',
+                'title': 'Tải Template Excel',
+                'class': 'addlink',
+                'icon': 'icon-download'
+            }
+        ]
+        return super().changelist_view(request, extra_context)
+
     def delete_queryset(self, request, queryset):
         """Xóa tất cả ảnh trên S3 trước khi xóa nhiều sản phẩm"""
         for product in queryset:
@@ -152,5 +172,3 @@ admin.site.register(Brand)
 admin.site.site_header = "Quản lý cửa hàng phụ kiện máy tính"
 admin.site.site_title = "Admin - Phụ kiện PC"
 admin.site.index_title = "Trang quản trị hệ thống"
-
-

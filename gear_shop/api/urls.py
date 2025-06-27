@@ -3,6 +3,7 @@ from rest_framework_simplejwt.views import TokenRefreshView
 
 from .admin_site.view.branches_view import StaffBranchesWithStockView, StaffStockUpdateView
 from .admin_site.view.dashboard_view import DashboardOverviewView, OrderStatsView, LowStockProductsView
+from .admin_site.view.product_upload_view import ProductExcelUploadView, download_product_template
 from .autocomplete import DistrictAutocomplete, WardAutocomplete
 from .views import checkout_view, search_view, product_view, stock_view, register_view
 from .views.branch_view import ProvinceListView, DistrictListView, WardListView, branches_with_stock, \
@@ -11,7 +12,8 @@ from .views.brand_view import BrandListView
 from .views.coupon_view import ApplyCouponView
 from .views.featured_products_view import FeaturedGroupAPIView
 from .views.flash_sale_view import FlashSaleListView
-from .views.order_view import CreateOrderView, OrderHistoryView, AdminOrderListView, StaffOrderStatusUpdateView
+from .views.order_view import CreateOrderView, OrderHistoryView, AdminOrderListView, StaffOrderStatusUpdateView, \
+    OrderDetailView
 from .views.product_view import ProductListView, ProductImageListView, ProductByCategoryListView, ProductDetailView, \
     ProductColorsView, ProductBySlugView
 from .views.category_view import CategoryListCreateView, CategoryDetailView, CategoryBySlugView
@@ -49,6 +51,8 @@ urlpatterns = [
     path('token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
 
     path('orders/create/', CreateOrderView.as_view(), name='create-order'),
+    path('orders/detail/<int:order_id>/', OrderDetailView.as_view(), name='order-detail'),
+
     path('payment/vnpay-return/', VNPAYReturnView.as_view(), name='vnpay-return'),
 
     # Add this to gear_shop/api/urls.py
@@ -113,4 +117,9 @@ urlpatterns = [
 
 path('dashboard/orders/stats/', OrderStatsView.as_view(), name='dashboard-order-stats'),
 path('dashboard/products/low-stock/', LowStockProductsView.as_view(), name='dashboard-low-stock'),
+
+
+    path('admin_site/products/upload-excel/', ProductExcelUploadView.as_view(), name='admin_site-product-upload-excel'),
+    path('admin_site/products/download-template/', download_product_template, name='admin_site-download-product-template'),
+
 ]

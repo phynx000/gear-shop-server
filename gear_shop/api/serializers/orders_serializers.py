@@ -62,6 +62,59 @@ class GetOrderSerializer(serializers.ModelSerializer):
         return obj.user.first_name if obj.user else None
 
 
+        return obj.get_payment_status_display()
+
+
+class OrderItemProductSerializer(serializers.ModelSerializer):
+    brand_name = serializers.CharField(source='brand.name', read_only=True)
+
+    class Meta:
+        model = Product
+        fields = ['id','name', 'brand_name', 'original_price', 'version']
+
+class GetOrderItemSerializer2(serializers.ModelSerializer):
+    product = OrderItemProductSerializer(read_only=True)
+
+    class Meta:
+        model = OrderItem
+        fields = ['id', 'product', 'quantity', 'price']
+
+
+class OrderDetailSerializer(serializers.ModelSerializer):
+    items = GetOrderItemSerializer2(many=True, read_only=True)
+    user_name = serializers.SerializerMethodField()
+    user_email = serializers.SerializerMethodField()
+    total_quantity = serializers.SerializerMethodField()
+    status_display = serializers.SerializerMethodField()
+    payment_status_display = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Order
+        fields = [
+            'id', 'user_name', 'user_email', 'total_price', 'email',
+            'status', 'status_display', 'payment_method', 'vnp_transaction_id',
+            'is_paid', 'payment_status', 'payment_status_display',
+            'shipping_address', 'phone', 'note', 'created_at',
+            'items', 'total_quantity'
+        ]
+
+    def get_user_name(self, obj):
+        return f"{obj.user.first_name} {obj.user.last_name}".strip() if obj.user else None
+
+    def get_user_email(self, obj):
+        return obj.user.email if obj.user else None
+
+    def get_total_quantity(self, obj):
+        return sum(item.quantity for item in obj.items.all())
+
+    def get_status_display(self, obj):
+        return obj.get_status_display()
+
+    def get_payment_status_display(self, obj):
+        return obj.get_payment_status_display()
+
+
+
 class OrderStatusUpdateSerializer(serializers.ModelSerializer):
     class Meta:
         model = Order

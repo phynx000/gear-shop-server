@@ -64,6 +64,7 @@ ALLOWED_HOSTS = []
 # Application definition
 
 INSTALLED_APPS = [
+    'jazzmin',  # Move jazzmin to top
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -78,8 +79,6 @@ INSTALLED_APPS = [
     'rest_framework_simplejwt.token_blacklist',
     "dal",
     "dal_select2",
-    'jazzmin',
-
 ]
 
 REST_FRAMEWORK = {
@@ -225,9 +224,7 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/5.1/howto/static-files/
 
 STATIC_URL = 'static/'
-
-
-
+STATIC_ROOT = BASE_DIR / 'staticfiles'
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field
@@ -235,3 +232,103 @@ STATIC_URL = 'static/'
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 
+JAZZMIN_SETTINGS = {
+    "site_title": "GearShop Admin",
+    "site_header": "GearShop",
+    "site_brand": "GearShop",
+    "login_logo": None,
+    "login_logo_dark": None,
+    "site_logo": None,
+    "welcome_sign": "Chào mừng đến với GearShop Admin",
+    "copyright": "GearShop Ltd",
+    "search_model": ["auth.User", "auth.Group"],
+    "user_avatar": None,
+
+    # Custom templates
+    "custom_links": {
+        "books": [{
+            "name": "Make Messages",
+            "url": "make_messages",
+            "icon": "fas fa-comments",
+            "permissions": ["books.view_book"]
+        }]
+    },
+
+    # Override login template
+    "login_logo": None,
+    "login_logo_dark": None,
+
+    # Theme settings
+    "show_sidebar": True,
+    "navigation_expanded": True,
+    "hide_apps": [],
+    "hide_models": [],
+    "order_with_respect_to": ["auth", "api"],
+
+    # Custom CSS
+    "custom_css": None,
+    "custom_js": None,
+
+    # Icons
+    "icons": {
+        "auth": "fas fa-users-cog",
+        "auth.user": "fas fa-user",
+        "auth.Group": "fas fa-users",
+        "api.Product": "fas fa-box",
+        "api.Order": "fas fa-shopping-cart",
+        "api.CustomUser": "fas fa-user-circle",
+        "api.Category": "fas fa-tags",
+        "api.Brand": "fas fa-trademark",
+        "api.Branch": "fas fa-store",
+        "api.Stock": "fas fa-warehouse",
+    },
+
+    # Button classes
+    "default_icon_parents": "fas fa-chevron-circle-right",
+    "default_icon_children": "fas fa-circle",
+
+    # Related modal
+    "related_modal_active": False,
+
+    # Use modals instead of popups
+    "use_google_fonts_cdn": True,
+    "show_ui_builder": False,
+
+    "changeform_format": "horizontal_tabs",
+    "changeform_format_overrides": {"auth.user": "collapsible", "auth.group": "vertical_tabs"},
+
+    # Language chooser
+    "language_chooser": False,
+}
+
+JAZZMIN_UI_TWEAKS = {
+    "navbar_small_text": False,
+    "footer_small_text": False,
+    "body_small_text": False,
+    "brand_small_text": False,
+    "brand_colour": False,
+    "accent": "accent-primary",
+    "navbar": "navbar-white navbar-light",
+    "no_navbar_border": False,
+    "navbar_fixed": False,
+    "layout_boxed": False,
+    "footer_fixed": False,
+    "sidebar_fixed": False,
+    "sidebar": "sidebar-dark-primary",
+    "sidebar_nav_small_text": False,
+    "sidebar_disable_expand": False,
+    "sidebar_nav_child_indent": False,
+    "sidebar_nav_compact_style": False,
+    "sidebar_nav_legacy_style": False,
+    "sidebar_nav_flat_style": False,
+    "theme": "default",
+    "dark_mode_theme": None,
+    "button_classes": {
+        "primary": "btn-outline-primary",
+        "secondary": "btn-outline-secondary",
+        "info": "btn-info",
+        "warning": "btn-warning",
+        "danger": "btn-danger",
+        "success": "btn-success"
+    }
+}

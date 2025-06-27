@@ -11,7 +11,8 @@ from ..permissions import IsStaffUser
 from rest_framework import status, generics
 
 from ..models import Order
-from ..serializers.orders_serializers import OrderCreateSerializer, GetOrderSerializer, OrderStatusUpdateSerializer
+from ..serializers.orders_serializers import OrderCreateSerializer, GetOrderSerializer, OrderStatusUpdateSerializer, \
+    OrderDetailSerializer
 from ..services.vnpay import VNPay
 
 
@@ -91,6 +92,32 @@ class OrderHistoryView(generics.ListAPIView):
         user = self.request.user
         return Order.objects.filter(user=user).order_by('-created_at')
 
+
+class OrderDetailView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, order_id):
+        try:
+            # Users can only view their own orders, staff can view any order
+            if request.user.is_staff:
+                order = get_object_or_404(Order, id=order_id)
+            else:
+                order = get_object_or_404(Order, id=order_id, user=request.user)
+
+            serializer = OrderDetailSerializer(order)
+            return Response(serializer.data, status=status.HTTP_200_OK)
+
+        except Order.DoesNotExist:
+            return Response(
+                {"error": "Order not found or you don't have permission to view it"},
+                status=status.HTTP_404_NOT_FOUND
+            )
+        except Exception as e:
+            print(f"Error retrieving order detail: {str(e)}")
+            return Response(
+                {"error": "An error occurred while retrieving the order"},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
 
 class AdminOrderListView(generics.ListAPIView):
     queryset = Order.objects.all().order_by('-created_at')
